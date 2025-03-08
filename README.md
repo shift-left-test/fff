@@ -431,6 +431,12 @@ could call the real `fprintf()` like this:
       return vfprintf(stream, format, ap);
     }
 
+You can also fake variadic functions using the macros `FAKE_VALUE_FUNC_VARLIST` and `FAKE_VOID_FUNC_VARLIST`. For instance:
+
+    FAKE_VALUE_FUNC_VARARG(int, vfprintf, FILE *, const char*, va_list);
+
+These macros behave exactly like `FAKE_VALUE_FUNC_VARARG` and `FAKE_VOID_FUNC_VARARG`, except they take a `va_list` as the last parameter instead of an ellipsis (`...`).
+
 Just like  [return value delegates](#custom-return-value-delegate-sequences), you can also specify sequences for variadic functions using `SET_CUSTOM_FAKE_SEQ`.
 See the test files for examples.
 
@@ -600,6 +606,8 @@ DECLARE_FAKE_VALUE_FUNC(int, value_function, int, int);
 DECLARE_FAKE_VOID_FUNC(void_function, int, int);
 DECLARE_FAKE_VALUE_FUNC_VARARG(int, value_function_vargs, const char *, int, ...);
 DECLARE_FAKE_VOID_FUNC_VARARG(void_function_vargs, const char *, int, ...);
+DECLARE_FAKE_VALUE_FUNC_VARLIST(int, value_function_varlist, const char *, int, va_list);
+DECLARE_FAKE_VOID_FUNC_VARLIST(void_function_varlist, const char *, int, va_list);
 
 
 /* Private source file file */
@@ -609,6 +617,8 @@ DEFINE_FAKE_VALUE_FUNC(int, value_function, int, int);
 DEFINE_FAKE_VOID_FUNC(void_function, int, int);
 DEFINE_FAKE_VALUE_FUNC_VARARG(int, value_function_vargs, const char *, int, ...);
 DEFINE_FAKE_VOID_FUNC_VARARG(void_function_vargs, const char *, int, ...);
+DEFINE_FAKE_VALUE_FUNC_VARLIST(int, value_function_varlist, const char *, int, va_list);
+DEFINE_FAKE_VOID_FUNC_VARLIST(void_function_varlist, const char *, int, va_list);
 
 ```
 
@@ -618,7 +628,7 @@ You can specify GCC function attributes for your fakes using the `FFF_GCC_FUNCTI
 
 ### Weak Functions
 
-One usful attribute is the _weak_ attribute that marks a function such that it can be overridden by a non-weak variant at link time.  Using weak functions in combination with fff can help simplify your testing approach.
+One useful attribute is the _weak_ attribute that marks a function such that it can be overridden by a non-weak variant at link time.  Using weak functions in combination with fff can help simplify your testing approach.
 
 For example:
 * Define a library of fake functions, e.g. libfake.a.
@@ -662,4 +672,6 @@ So whats the point?
 | FAKE_VALUE_FUNC(return_type, fn [,arg_types*]); | Define a fake function returning a value with type return_type taking n arguments | FAKE_VALUE_FUNC(int, DISPLAY_get_line_insert_index); |
 | FAKE_VOID_FUNC_VARARG(fn [,arg_types*], ...); | Define a fake variadic function returning void with type return_type taking n arguments and n variadic arguments | FAKE_VOID_FUNC_VARARG(fn, const char*, ...) |
 | FAKE_VALUE_FUNC_VARARG(return_type, fn [,arg_types*], ...); | Define a fake variadic function returning a value with type return_type taking n arguments and n variadic arguments | FAKE_VALUE_FUNC_VARARG(int, fprintf, FILE*, const char*, ...) |
+| FAKE_VOID_FUNC_VARLIST(fn [,arg_types*], va_list); | Define a fake function named fn returning void with n arguments, and a `va_list` as the last argument | FAKE_VOID_FUNC_VARLIST(fn, const char*, va_list) |
+| FAKE_VALUE_FUNC_VARLIST(return_type, fn [,arg_types*], va_list); | Define a fake function named fn returning a value with type return_type taking n arguments and a `va_list` as the last argument | FAKE_VALUE_FUNC_VARLIST(int, vfprintf, FILE*, va_list) |
 | RESET_FAKE(fn); | Reset the state of fake function called fn | RESET_FAKE(DISPLAY_init); |

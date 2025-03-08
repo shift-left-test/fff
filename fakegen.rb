@@ -64,9 +64,11 @@ def output_internal_helper_macros
   define_declare_all_func_common_helper
   define_declare_return_value_history
   define_save_arg_helper
+  define_save_arg_varlist_helper
   define_room_for_more_history
   define_save_ret_history_helper
   define_save_arg_history_helper
+  define_save_arg_history_varlist_helper
   define_history_dropped_helper
   define_value_function_variables_helper
   define_custom_fake_seq_variables_helper
@@ -141,6 +143,14 @@ def define_save_arg_helper
   }
 end
 
+def define_save_arg_varlist_helper
+  puts
+  putd_backslash "#define SAVE_ARG_VARLIST(FUNCNAME, n)"
+  indent {
+    putd "va_copy(FUNCNAME##_fake.arg##n##_val, arg##n);"
+  }
+end
+
 def define_save_ret_history_helper
   putd ""
   putd_backslash "#define SAVE_RET_HISTORY(FUNCNAME, RETVAL)"
@@ -165,6 +175,14 @@ def define_save_arg_history_helper
   putd_backslash "#define SAVE_ARG_HISTORY(FUNCNAME, ARGN)"
   indent {
     putd "memcpy((void*)&FUNCNAME##_fake.arg##ARGN##_history[FUNCNAME##_fake.call_count], (void*)&arg##ARGN, sizeof(arg##ARGN));"
+  }
+end
+
+def define_save_arg_history_varlist_helper
+  puts
+  putd_backslash "#define SAVE_ARG_HISTORY_VARLIST(FUNCNAME, ARGN)"
+  indent {
+    putd "va_copy(FUNCNAME##_fake.arg##ARGN##_history[FUNCNAME##_fake.call_count], arg##ARGN);"
   }
 end
 
@@ -282,10 +300,10 @@ def indent
   popd
 end
 
-def output_macro(arg_count, has_varargs, has_calling_conventions, is_value_function)
-
-  vararg_name = has_varargs ? "_VARARG" : ""
-  fake_macro_name = is_value_function ? "FAKE_VALUE_FUNC#{arg_count}#{vararg_name}" : "FAKE_VOID_FUNC#{arg_count}#{vararg_name}"
+def output_macro(arg_count, vararg, has_calling_conventions, is_value_function)
+  appendix = (vararg == :vararg) ? "_VARARG" : (vararg == :varlist) ? "_VARLIST" : ""
+  has_varargs = (vararg == :vararg)
+  fake_macro_name = is_value_function ? "FAKE_VALUE_FUNC#{arg_count}#{appendix}" : "FAKE_VOID_FUNC#{arg_count}#{appendix}"
   declare_macro_name = "DECLARE_#{fake_macro_name}"
   define_macro_name = "DEFINE_#{fake_macro_name}"
   saved_arg_count = arg_count - (has_varargs ? 1 : 0)
@@ -303,7 +321,7 @@ def output_macro(arg_count, has_varargs, has_calling_conventions, is_value_funct
     putd_backslash "FUNCNAME##_Fake FUNCNAME##_fake;"
     putd_backslash function_signature(saved_arg_count, has_varargs, has_calling_conventions, is_value_function) + "{"
     indent {
-      output_function_body(saved_arg_count, has_varargs, is_value_function)
+      output_function_body(saved_arg_count, vararg, is_value_function)
     }
     putd_backslash "}"
     putd_backslash "DEFINE_RESET_FUNCTION(FUNCNAME)"
@@ -417,11 +435,21 @@ def function_signature(arg_count, has_varargs, has_calling_conventions, is_value
     "#{return_type} FFF_GCC_FUNCTION_ATTRIBUTES FUNCNAME(#{arg_val_list(arg_count)}#{varargs})"
 end
 
-def output_function_body(arg_count, has_varargs, is_value_function)
-  arg_count.times { |i| putd_backslash "SAVE_ARG(FUNCNAME, #{i});" }
+def output_function_body(arg_count, vararg, is_value_function)
+  if (vararg == :varlist)
+    (arg_count - 1).times { |i| putd_backslash "SAVE_ARG(FUNCNAME, #{i});" }
+    putd_backslash "SAVE_ARG_VARLIST(FUNCNAME, #{arg_count - 1});"
+  else
+    arg_count.times { |i| putd_backslash "SAVE_ARG(FUNCNAME, #{i});" }
+  end
   putd_backslash "if(ROOM_FOR_MORE_HISTORY(FUNCNAME)){"
   indent {
-    arg_count.times { |i| putd_backslash "SAVE_ARG_HISTORY(FUNCNAME, #{i});" }
+    if (vararg == :varlist)
+      (arg_count - 1).times { |i| putd_backslash "SAVE_ARG_HISTORY(FUNCNAME, #{i});" }
+      putd_backslash "SAVE_ARG_HISTORY_VARLIST(FUNCNAME, #{arg_count - 1});"
+    else
+      arg_count.times { |i| putd_backslash "SAVE_ARG_HISTORY(FUNCNAME, #{i});" }
+    end
   }
   putd_backslash "}"
   putd_backslash "else{"
@@ -432,7 +460,7 @@ def output_function_body(arg_count, has_varargs, is_value_function)
   putd_backslash "INCREMENT_CALL_COUNT(FUNCNAME);"
   putd_backslash "REGISTER_CALL(FUNCNAME);"
 
-  if has_varargs
+  if (vararg == :vararg)
     return_type = is_value_function ? "return " : ""
     putd_backslash "if (FUNCNAME##_fake.custom_fake_seq_len){ /* a sequence of custom fakes */"
     indent {
@@ -582,7 +610,7 @@ def generate_arg_sequence(args, prefix, do_reverse, joinstr)
 end
 
 def counting_macro_instance(type, has_calling_conventions, vararg = :non_vararg, prefix = "")
-  appendix = (vararg == :vararg) ? "_VARARG" : ""
+  appendix = (vararg == :vararg) ? "_VARARG" : (vararg == :varlist) ? "_VARLIST" : ""
   if has_calling_conventions
     minus_count = (type == :VOID) ? 2 : 3
   else
@@ -597,7 +625,7 @@ def counting_macro_instance(type, has_calling_conventions, vararg = :non_vararg,
     EXPAND(#{prefix}FUNC_#{type.to_s}#{appendix}_N(N,__VA_ARGS__))
 
 #define #{prefix}FUNC_#{type.to_s}#{appendix}_N(N,...) \
-    EXPAND(#{prefix}FAKE_#{type.to_s}_FUNC ## N#{" ## _VARARG" if vararg == :vararg}(__VA_ARGS__))
+    EXPAND(#{prefix}FAKE_#{type.to_s}_FUNC ## N#{appendix.empty? ? "" : " ## " + appendix}(__VA_ARGS__))
 
   MACRO_COUNTING_INSTANCE
 end
@@ -640,6 +668,8 @@ def output_macro_counting_shortcuts(has_calling_conventions)
 #{counting_macro_instance(:VOID,  has_calling_conventions)}
 #{counting_macro_instance(:VALUE, has_calling_conventions, :vararg)}
 #{counting_macro_instance(:VOID, has_calling_conventions, :vararg)}
+#{counting_macro_instance(:VALUE, has_calling_conventions, :varlist)}
+#{counting_macro_instance(:VOID, has_calling_conventions, :varlist)}
 
 /* DECLARE FAKE FUNCTIONS - PLACE IN HEADER FILES */
 
@@ -647,6 +677,8 @@ def output_macro_counting_shortcuts(has_calling_conventions)
 #{counting_macro_instance(:VOID, has_calling_conventions, :non_vararg, "DECLARE_")}
 #{counting_macro_instance(:VALUE, has_calling_conventions, :vararg, "DECLARE_")}
 #{counting_macro_instance(:VOID, has_calling_conventions, :vararg, "DECLARE_")}
+#{counting_macro_instance(:VALUE, has_calling_conventions, :varlist, "DECLARE_")}
+#{counting_macro_instance(:VOID, has_calling_conventions, :varlist, "DECLARE_")}
 
 /* DEFINE FAKE FUNCTIONS - PLACE IN SOURCE FILES */
 
@@ -654,6 +686,8 @@ def output_macro_counting_shortcuts(has_calling_conventions)
 #{counting_macro_instance(:VOID, has_calling_conventions, :non_vararg, "DEFINE_")}
 #{counting_macro_instance(:VALUE, has_calling_conventions, :vararg, "DEFINE_")}
 #{counting_macro_instance(:VOID, has_calling_conventions, :vararg, "DEFINE_")}
+#{counting_macro_instance(:VALUE, has_calling_conventions, :varlist, "DEFINE_")}
+#{counting_macro_instance(:VOID, has_calling_conventions, :varlist, "DEFINE_")}
 
   MACRO_COUNTING
 end
@@ -689,10 +723,13 @@ help {
     define_fff_globals
     # Create fake generators for 0..MAX_ARGS
     num_fake_generators = $MAX_ARGS + 1
-    num_fake_generators.times {|arg_count| output_macro(arg_count, false, has_calling_conventions, false)}
-    num_fake_generators.times {|arg_count| output_macro(arg_count, false, has_calling_conventions, true)}
+    num_fake_generators.times {|arg_count| output_macro(arg_count, :non_vararg, has_calling_conventions, false)}
+    num_fake_generators.times {|arg_count| output_macro(arg_count, :non_vararg, has_calling_conventions, true)}
     # generate the varargs variants
-    (2..$MAX_ARGS).each {|arg_count| output_macro(arg_count, true, has_calling_conventions, false)}
-    (2..$MAX_ARGS).each {|arg_count| output_macro(arg_count, true, has_calling_conventions, true)}
+    (2..$MAX_ARGS).each {|arg_count| output_macro(arg_count, :vararg, has_calling_conventions, false)}
+    (2..$MAX_ARGS).each {|arg_count| output_macro(arg_count, :vararg, has_calling_conventions, true)}
+    # generate the varlist variants
+    (2..$MAX_ARGS).each {|arg_count| output_macro(arg_count, :varlist, has_calling_conventions, false)}
+    (2..$MAX_ARGS).each {|arg_count| output_macro(arg_count, :varlist, has_calling_conventions, true)}
   }
 }

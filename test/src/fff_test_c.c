@@ -30,6 +30,8 @@ FAKE_VALUE_FUNC(enum MYBOOL, enumfunc0);
 FAKE_VALUE_FUNC(struct MyStruct, structfunc0);
 FAKE_VOID_FUNC_VARARG(voidfunc3var, const char *, int, ...);
 FAKE_VALUE_FUNC_VARARG(int, valuefunc3var, const char *, int, ...);
+FAKE_VOID_FUNC_VARLIST(voidfunc3varlist, const char *, int, va_list);
+FAKE_VALUE_FUNC_VARLIST(int, valuefunc3varlist, const char *, int, va_list);
 FAKE_VALUE_FUNC(int, strlcpy3, char* const, const char* const, const size_t);
 FAKE_VOID_FUNC(voidfunc20, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int);
 FAKE_VALUE_FUNC(int, valuefunc20, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int);
@@ -42,6 +44,8 @@ FAKE_VALUE_FUNC(enum MYBOOL, __cdecl, enumfunc0);
 FAKE_VALUE_FUNC(struct MyStruct, __cdecl, structfunc0);
 FAKE_VOID_FUNC_VARARG(__cdecl, voidfunc3var, char *, int, ...);
 FAKE_VALUE_FUNC_VARARG(int, __cdecl, valuefunc3var, char *, int, ...);
+FAKE_VOID_FUNC_VARLIST(__cdecl, voidfunc3varlist, char *, int, va_list);
+FAKE_VALUE_FUNC_VARLIST(int, __cdecl, valuefunc3varlist, char *, int, va_list);
 FAKE_VALUE_FUNC(int, __cdecl, strlcpy3, char* const, const char* const, const size_t);
 FAKE_VOID_FUNC(__cdecl, voidfunc20, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int);
 FAKE_VALUE_FUNC(int, __cdecl, valuefunc20, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int);
@@ -57,6 +61,8 @@ void setup()
     RESET_FAKE(structfunc0);
     RESET_FAKE(voidfunc3var);
     RESET_FAKE(valuefunc3var);
+    RESET_FAKE(voidfunc3varlist);
+    RESET_FAKE(valuefunc3varlist);
     RESET_FAKE(strlcpy3);
     FFF_RESET_HISTORY();
 }
@@ -120,6 +126,13 @@ int main()
     RUN_TEST(FFFTestSuite, vararg_custom_fake_seq_return_values_saved_in_history);
     RUN_TEST(FFFTestSuite, vararg_custom_fake_sequence_exhausted);
     RUN_TEST(FFFTestSuite, vararg_custom_fake_sequence_reset);
+
+    RUN_TEST(FFFTestSuite, varlist_custom_fake_sequence_not_exhausted);
+    RUN_TEST(FFFTestSuite, varlist_custom_fake_seq_return_values_saved_in_history);
+    RUN_TEST(FFFTestSuite, varlist_custom_fake_sequence_exhausted);
+    RUN_TEST(FFFTestSuite, varlist_custom_fake_sequence_reset);
+    RUN_TEST(FFFTestSuite, use_void_varlist_fake_with_different_number_of_arguments);
+    RUN_TEST(FFFTestSuite, use_value_varlist_fake_with_different_number_of_arguments);
 
     RUN_TEST(FFFTestSuite, can_capture_upto_20_arguments_correctly);
     RUN_TEST(FFFTestSuite, value_func_can_capture_upto_20_arguments_correctly);

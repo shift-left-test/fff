@@ -11,6 +11,8 @@ DEFINE_FAKE_VALUE_FUNC(enum MYBOOL, enumfunc0);
 DEFINE_FAKE_VALUE_FUNC(struct MyStruct, structfunc0);
 DEFINE_FAKE_VOID_FUNC_VARARG(voidfunc3var, const char *, int, ...);
 DEFINE_FAKE_VALUE_FUNC_VARARG(int, valuefunc3var, const char *, int, ...);
+DEFINE_FAKE_VOID_FUNC_VARLIST(voidfunc3varlist, const char *, int, va_list);
+DEFINE_FAKE_VALUE_FUNC_VARLIST(int, valuefunc3varlist, const char *, int, va_list);
 #ifndef __cplusplus
 DEFINE_FAKE_VALUE_FUNC(int, strlcpy3, char* const, const char* const, const size_t);
 #endif /* __cplusplus */
@@ -26,6 +28,8 @@ DEFINE_FAKE_VALUE_FUNC(enum MYBOOL, __cdecl, enumfunc0);
 DEFINE_FAKE_VALUE_FUNC(struct MyStruct, __cdecl, structfunc0);
 DEFINE_FAKE_VOID_FUNC_VARARG(__cdecl, voidfunc3var, const char *, int, ...);
 DEFINE_FAKE_VALUE_FUNC_VARARG(int, __cdecl, valuefunc3var, const char *, int, ...);
+DEFINE_FAKE_VOID_FUNC_VARLIST(__cdecl, voidfunc3varlist, const char *, int, va_list);
+DEFINE_FAKE_VALUE_FUNC_VARLIST(int, __cdecl, valuefunc3varlist, const char *, int, va_list);
 #ifndef __cplusplus
 DEFINE_FAKE_VALUE_FUNC(int, __cdecl, strlcpy3, char* const, const char* const, const size_t);
 #endif /* __cplusplus */

@@ -24,6 +24,8 @@ FAKE_VOID_FUNC(voidfunc1outparam, char *);
 FAKE_VALUE_FUNC(long, longfunc0);
 FAKE_VOID_FUNC_VARARG(voidfunc3var, const char *, int, ...);
 FAKE_VALUE_FUNC_VARARG(int, valuefunc3var, const char *, int, ...);
+FAKE_VOID_FUNC_VARLIST(voidfunc3varlist, const char *, int, va_list);
+FAKE_VALUE_FUNC_VARLIST(int, valuefunc3varlist, const char *, int, va_list);
 FAKE_VOID_FUNC(voidfunc20, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int);
 FAKE_VALUE_FUNC(int, valuefunc20, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int);
 #else
@@ -33,6 +35,8 @@ FAKE_VOID_FUNC(__cdecl, voidfunc1outparam, char *);
 FAKE_VALUE_FUNC(long, __cdecl, longfunc0);
 FAKE_VOID_FUNC_VARARG(__cdecl, voidfunc3var, const char *, int, ...);
 FAKE_VALUE_FUNC_VARARG(int, __cdecl, valuefunc3var, const char *, int, ...);
+FAKE_VOID_FUNC_VARLIST(__cdecl, voidfunc3var, const char *, int, va_list);
+FAKE_VALUE_FUNC_VARLIST(int, __cdecl, valuefunc3var, const char *, int, va_list);
 FAKE_VOID_FUNC(__cdecl, voidfunc20, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int);
 FAKE_VALUE_FUNC(int, __cdecl, valuefunc20, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int);
 #endif
@@ -48,6 +52,8 @@ public:
         RESET_FAKE(voidfunc1outparam);
         RESET_FAKE(voidfunc3var);
         RESET_FAKE(valuefunc3var);
+        RESET_FAKE(voidfunc3varlist);
+        RESET_FAKE(valuefunc3varlist);
         FFF_RESET_HISTORY();
     }
 };

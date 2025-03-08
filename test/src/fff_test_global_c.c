@@ -16,6 +16,8 @@ void setup()
     RESET_FAKE(structfunc0);
     RESET_FAKE(voidfunc3var);
     RESET_FAKE(valuefunc3var);
+    RESET_FAKE(voidfunc3varlist);
+    RESET_FAKE(valuefunc3varlist);
     RESET_FAKE(strlcpy3);
 
     FFF_RESET_HISTORY();
@@ -72,6 +74,13 @@ int main()
     RUN_TEST(FFFTestSuite, vararg_custom_fake_seq_return_values_saved_in_history);
     RUN_TEST(FFFTestSuite, vararg_custom_fake_sequence_exhausted);
     RUN_TEST(FFFTestSuite, vararg_custom_fake_sequence_reset);
+
+    RUN_TEST(FFFTestSuite, varlist_custom_fake_sequence_not_exhausted);
+    RUN_TEST(FFFTestSuite, varlist_custom_fake_seq_return_values_saved_in_history);
+    RUN_TEST(FFFTestSuite, varlist_custom_fake_sequence_exhausted);
+    RUN_TEST(FFFTestSuite, varlist_custom_fake_sequence_reset);
+    RUN_TEST(FFFTestSuite, use_void_varlist_fake_with_different_number_of_arguments);
+    RUN_TEST(FFFTestSuite, use_value_varlist_fake_with_different_number_of_arguments);
 
     RUN_TEST(FFFTestSuite, can_capture_upto_20_arguments_correctly);
     RUN_TEST(FFFTestSuite, value_func_can_capture_upto_20_arguments_correctly);

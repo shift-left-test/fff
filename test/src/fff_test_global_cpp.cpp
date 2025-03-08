@@ -17,10 +17,10 @@ public:
         RESET_FAKE(voidfunc1outparam);
         RESET_FAKE(voidfunc3var);
         RESET_FAKE(valuefunc3var);
+        RESET_FAKE(voidfunc3varlist);
+        RESET_FAKE(valuefunc3varlist);
         FFF_RESET_HISTORY();
     }
 };
 
 #include "test_cases.include"
-
-
