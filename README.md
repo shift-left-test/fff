@@ -158,7 +158,12 @@ And the unit test might look something like this:
 TEST_F(UITests, when_empty_lines_write_line_doesnt_clear_screen)
 {
     // given
+    // Assign the return value directly to return_val
     DISPLAY_get_line_insert_index_fake.return_val = 1;
+
+    // Alternatively, use the macro to set the return value, replacing any previous action.
+    // SET_RETURN_VAL(DISPLAY_get_line_insert_index, 1);
+
     char msg[] = "helloworld";
     // when
     UI_write_line(msg);
@@ -340,7 +345,12 @@ long my_custom_value_fake(void)
 }
 TEST_F(FFFTestSuite, when_value_custom_fake_called_THEN_it_returns_custom_return_value)
 {
+    // Assign the function pointer directly to custom_fake
     longfunc0_fake.custom_fake = my_custom_value_fake;
+
+    // Alternatively, use the macro to set custom_fake, replacing any previous action.
+    // SET_CUSTOM_FAKE(longfunc0, my_custom_value_fake);
+
     long retval = longfunc0();
     ASSERT_EQ(MEANING_OF_LIFE, retval);
 }

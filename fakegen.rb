@@ -57,7 +57,9 @@ end
 def output_internal_helper_macros
   putd "/* -- INTERNAL HELPER MACROS -- */"
 
+  define_return_val_helper
   define_return_sequence_helper
+  define_custom_fake_helper
   define_custom_fake_sequence_helper
   define_reset_fake_macro
   define_declare_arg_helper
@@ -76,22 +78,42 @@ def output_internal_helper_macros
   define_return_fake_result_helper
   define_extern_c_helper
   define_reset_fake_helper
+  define_reset_void_fake_action_helper
+  define_reset_value_fake_action_helper
 
   putd "/* -- END INTERNAL HELPER MACROS -- */"
   puts
 end
 
+def define_return_val_helper
+  putd_backslash "#define SET_RETURN_VAL(FUNCNAME, RETVAL)"
+  indent {
+    putd_backslash "FUNCNAME##_reset_actions();"
+    putd "FUNCNAME##_fake.return_val = RETVAL;"
+  }
+end
+
 def define_return_sequence_helper
   putd_backslash "#define SET_RETURN_SEQ(FUNCNAME, ARRAY_POINTER, ARRAY_LEN)"
   indent {
+    putd_backslash "FUNCNAME##_reset_actions();"
     putd_backslash "FUNCNAME##_fake.return_val_seq = ARRAY_POINTER;"
     putd "FUNCNAME##_fake.return_val_seq_len = ARRAY_LEN;"
+  }
+end
+
+def define_custom_fake_helper
+  putd_backslash "#define SET_CUSTOM_FAKE(FUNCNAME, CUSTOM_FUNC)"
+  indent {
+    putd_backslash "FUNCNAME##_reset_actions();"
+    putd "FUNCNAME##_fake.custom_fake = CUSTOM_FUNC;"
   }
 end
 
 def define_custom_fake_sequence_helper
   putd_backslash "#define SET_CUSTOM_FAKE_SEQ(FUNCNAME, ARRAY_POINTER, ARRAY_LEN)"
   indent {
+    putd_backslash "FUNCNAME##_reset_actions();"
     putd_backslash "FUNCNAME##_fake.custom_fake_seq = ARRAY_POINTER;"
     putd "FUNCNAME##_fake.custom_fake_seq_len = ARRAY_LEN;"
   }
@@ -272,6 +294,41 @@ def define_reset_fake_helper
     putd "}"
   }
 end
+
+def define_reset_void_fake_action_helper
+  puts
+  putd_backslash "#define DEFINE_RESET_VOID_FUNCTION_ACTIONS(FUNCNAME)"
+  indent {
+    putd_backslash "void FUNCNAME##_reset_actions(void) {"
+    indent {
+      putd_backslash "FUNCNAME##_fake.custom_fake = NULL;"
+      putd_backslash "FUNCNAME##_fake.custom_fake_seq = NULL;"
+      putd_backslash "FUNCNAME##_fake.custom_fake_seq_len = 0;"
+      putd_backslash "FUNCNAME##_fake.custom_fake_seq_idx = 0;"
+    }
+    putd "}"
+  }
+end
+
+def define_reset_value_fake_action_helper
+  puts
+  putd_backslash "#define DEFINE_RESET_VALUE_FUNCTION_ACTIONS(FUNCNAME)"
+  indent {
+    putd_backslash "void FUNCNAME##_reset_actions(void) {"
+    indent {
+      putd_backslash "memset((void*)&FUNCNAME##_fake.return_val, 0, sizeof(FUNCNAME##_fake.return_val));"
+      putd_backslash "FUNCNAME##_fake.return_val_seq = NULL;"
+      putd_backslash "FUNCNAME##_fake.return_val_seq_len = 0;"
+      putd_backslash "FUNCNAME##_fake.return_val_seq_idx = 0;"
+      putd_backslash "FUNCNAME##_fake.custom_fake = NULL;"
+      putd_backslash "FUNCNAME##_fake.custom_fake_seq = NULL;"
+      putd_backslash "FUNCNAME##_fake.custom_fake_seq_len = 0;"
+      putd_backslash "FUNCNAME##_fake.custom_fake_seq_idx = 0;"
+    }
+    putd "}"
+  }
+end
+
 # ------  End Helper macros ------ #
 
 #fakegen helpers to print at levels of indentation
@@ -325,6 +382,11 @@ def output_macro(arg_count, vararg, has_calling_conventions, is_value_function)
     }
     putd_backslash "}"
     putd_backslash "DEFINE_RESET_FUNCTION(FUNCNAME)"
+    if is_value_function
+      putd_backslash "DEFINE_RESET_VALUE_FUNCTION_ACTIONS(FUNCNAME)"
+    else
+      putd_backslash "DEFINE_RESET_VOID_FUNCTION_ACTIONS(FUNCNAME)"
+    end
   }
 
   puts
@@ -379,6 +441,7 @@ def output_variables(arg_count, has_varargs, has_calling_conventions, is_value_f
   }
   putd_backslash "extern FUNCNAME##_Fake FUNCNAME##_fake;"
   putd_backslash "void FUNCNAME##_reset(void);"
+  putd_backslash "void FUNCNAME##_reset_actions(void);"
   putd_backslash function_signature(arg_count, has_varargs, has_calling_conventions, is_value_function) + ";"
 end
 
